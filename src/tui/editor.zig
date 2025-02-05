@@ -3400,6 +3400,16 @@ pub const Editor = struct {
     }
     pub const cancel_meta: Meta = .{ .description = "Cancel current action" };
 
+    pub fn select_line_vim(self: *Self, _: Context) Result {
+        const primary = self.get_primary();
+        const root = self.buf_root() catch return;
+        primary.disable_selection(root, self.metrics);
+        self.selection_mode = .line;
+        try self.select_line_around_cursor(primary);
+        self.clamp();
+    }
+    pub const select_line_vim_meta: Meta = .{ .description = "Select the line around the cursor (vim)" };
+
     pub fn select_up(self: *Self, _: Context) Result {
         const root = try self.buf_root();
         try self.with_selections_const(root, move_cursor_up);
@@ -3592,6 +3602,14 @@ pub const Editor = struct {
         try move_cursor_begin(root, &sel.begin, self.metrics);
         try move_cursor_end(root, &sel.end, self.metrics);
         cursel.cursor = sel.end;
+    }
+
+    fn select_line_around_cursor(self: *Self, cursel: *CurSel) !void {
+        const root = try self.buf_root();
+        const sel = try cursel.enable_selection(root, self.metrics);
+        sel.normalize();
+        try move_cursor_begin(root, &sel.begin, self.metrics);
+        try move_cursor_end(root, &sel.end, self.metrics);
     }
 
     fn selection_reverse(_: Buffer.Root, cursel: *CurSel) !void {

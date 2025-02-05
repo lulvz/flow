@@ -33,15 +33,20 @@
             ["o", ["smart_insert_line_after"], ["enter_mode", "insert"]],
             ["O", ["smart_insert_line_before"], ["enter_mode", "insert"]],
 
+            ["<S-.><S-.>", "indent"],
+            ["<S-,><S-,>", "unindent"],
+
             ["v", "enter_mode", "visual"],
-            ["V", ["move_begin"], ["enter_mode", "visual"], ["select_end"]],
+            ["V", ["enter_mode", "visual line"], ["select_line_vim"]],
 
             ["n", "goto_next_match"],
             ["0", "move_begin"],
             ["^", "smart_move_begin"],
             ["$", "move_end"],
             [":", "open_command_palette"],
-            ["p", "paste_internal_vim"],
+
+            ["p", ["move_right"], ["paste_internal_vim"]],
+            ["P", "paste_internal_vim"],
 
             ["gd", "goto_definition"],
             ["gi", "goto_implementation"],
@@ -83,17 +88,56 @@
         "cursor": "block",
         "selection": "normal",
         "press": [
-            ["<Esc>", "enter_mode", "normal"],
+            ["<Esc>", ["cancel"], ["enter_mode", "normal"]],
             ["k", "select_up"],
             ["j", "select_down"],
             ["h", "select_left"],
             ["l", "select_right"],
+
+            ["0", "move_begin"],
+            ["^", "smart_move_begin"],
+            ["$", "move_end"],
+
+            ["p", ["move_right"], ["paste_internal_vim"]],
+            ["P", "paste_internal_vim"],
+
+            ["<S-.>", "indent"],
+            ["<S-,>", "unindent"],
 
             ["y", ["copy_internal_vim"], ["cancel"], ["enter_mode", "normal"]],
 
             ["x", ["cut_forward_internal"], ["cancel"], ["enter_mode", "normal"]],
             ["d", ["cut_forward_internal"], ["cancel"], ["enter_mode", "normal"]],
             ["s", ["cut_forward_internal"], ["cancel"], ["enter_mode", "insert"]]
+        ]
+    },
+    "visual line": {
+        "syntax": "vim",
+        "on_match_failure": "ignore",
+        "name": "VISUAL LINE",
+        "line_numbers": "relative",
+        "cursor": "block",
+        "selection": "normal",
+        "press": [
+            ["<Esc>", ["cancel"], ["enter_mode", "normal"]],
+            ["k", "select_up"],
+            ["j", "select_down"],
+
+            ["0", "move_begin"],
+            ["^", "smart_move_begin"],
+            ["$", "move_end"],
+
+            ["p", ["move_right"], ["paste_internal_vim"]],
+            ["P", "paste_internal_vim"],
+
+            ["<S-.>", "indent"],
+            ["<S-,>", "unindent"],
+
+            ["y", ["copy_line_internal_vim"], ["cancel"], ["enter_mode", "normal"]],
+
+            ["x", ["cut_internal_vim"], ["cancel"], ["enter_mode", "normal"]],
+            ["d", ["cut_internal_vim"], ["cancel"], ["enter_mode", "normal"]],
+            ["s", ["cut_internal_vim"], ["cancel"], ["enter_mode", "insert"]]
         ]
     },
     "insert": {
