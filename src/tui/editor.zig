@@ -2120,8 +2120,18 @@ pub const Editor = struct {
         cursor.move_half_page_up(root, view, metrics);
     }
 
+    fn move_cursor_half_page_up_vim(root: Buffer.Root, cursor: *Cursor, view: *const View, metrics: Buffer.Metrics) !void {
+        cursor.move_half_page_up(root, view, metrics);
+        if(is_eol_vim(root, cursor, metrics)) try move_cursor_left_vim(root, cursor, metrics);
+    }
+
     fn move_cursor_half_page_down(root: Buffer.Root, cursor: *Cursor, view: *const View, metrics: Buffer.Metrics) !void {
         cursor.move_half_page_down(root, view, metrics);
+    }
+
+    fn move_cursor_half_page_down_vim(root: Buffer.Root, cursor: *Cursor, view: *const View, metrics: Buffer.Metrics) !void {
+        cursor.move_half_page_down(root, view, metrics);
+        if(is_eol_vim(root, cursor, metrics)) try move_cursor_left_vim(root, cursor, metrics);
     }
 
     pub fn primary_click(self: *Self, y: c_int, x: c_int) !void {
@@ -3340,6 +3350,18 @@ pub const Editor = struct {
     }
     pub const move_scroll_half_page_up_meta: Meta = .{ .description = "Move and scroll half a page up" };
 
+    pub fn move_scroll_half_page_up_vim(self: *Self, _: Context) Result {
+        if (self.screen_cursor(&self.get_primary().cursor)) |cursor| {
+            const root = try self.buf_root();
+            self.with_cursors_and_view_const(root, move_cursor_half_page_up_vim, &self.view) catch {};
+            const new_cursor_row = self.get_primary().cursor.row;
+            self.update_scroll_dest_abs(if (cursor.row > new_cursor_row) 0 else new_cursor_row - cursor.row);
+        } else {
+            return self.move_half_page_up(.{});
+        }
+    }
+    pub const move_scroll_half_page_up_vim_meta: Meta = .{ .description = "Move and scroll half a page up (vim)" };
+
     pub fn move_scroll_half_page_down(self: *Self, _: Context) Result {
         if (self.screen_cursor(&self.get_primary().cursor)) |cursor| {
             const root = try self.buf_root();
@@ -3351,6 +3373,18 @@ pub const Editor = struct {
         }
     }
     pub const move_scroll_half_page_down_meta: Meta = .{ .description = "Move and scroll half a page down" };
+
+    pub fn move_scroll_half_page_down_vim(self: *Self, _: Context) Result {
+        if (self.screen_cursor(&self.get_primary().cursor)) |cursor| {
+            const root = try self.buf_root();
+            self.with_cursors_and_view_const(root, move_cursor_half_page_down_vim, &self.view) catch {};
+            const new_cursor_row = self.get_primary().cursor.row;
+            self.update_scroll_dest_abs(if (cursor.row > new_cursor_row) 0 else new_cursor_row - cursor.row);
+        } else {
+            return self.move_half_page_down(.{});
+        }
+    }
+    pub const move_scroll_half_page_down_vim_meta: Meta = .{ .description = "Move and scroll half a page down (vim)" };
 
     pub fn smart_move_begin(self: *Self, _: Context) Result {
         const root = try self.buf_root();
