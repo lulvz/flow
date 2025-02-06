@@ -2033,6 +2033,14 @@ pub const Editor = struct {
         return false;
     }
 
+    fn is_eol_vim(root: Buffer.Root, cursor: *const Cursor, metrics: Buffer.Metrics) bool {
+        const line_width = root.line_width(cursor.row, metrics) catch return true;
+        if (line_width == 0) return true;
+        if (cursor.col == line_width)
+            return true;
+        return false;
+    }
+
     fn move_cursor_left(root: Buffer.Root, cursor: *Cursor, metrics: Buffer.Metrics) error{Stop}!void {
         try cursor.move_left(root, metrics);
     }
@@ -2078,8 +2086,18 @@ pub const Editor = struct {
         try cursor.move_up(root, metrics);
     }
 
+    fn move_cursor_up_vim(root: Buffer.Root, cursor: *Cursor, metrics: Buffer.Metrics) !void {
+        try cursor.move_up(root, metrics);
+        if(is_eol_vim(root, cursor, metrics)) try move_cursor_left_vim(root, cursor, metrics);
+    }
+
     fn move_cursor_down(root: Buffer.Root, cursor: *Cursor, metrics: Buffer.Metrics) !void {
         try cursor.move_down(root, metrics);
+    }
+
+    fn move_cursor_down_vim(root: Buffer.Root, cursor: *Cursor, metrics: Buffer.Metrics) !void {
+        try cursor.move_down(root, metrics);
+        if(is_eol_vim(root, cursor, metrics)) try move_cursor_left_vim(root, cursor, metrics);
     }
 
     fn move_cursor_buffer_begin(_: Buffer.Root, cursor: *Cursor, _: Buffer.Metrics) !void {
@@ -2942,6 +2960,13 @@ pub const Editor = struct {
     }
     pub const move_up_meta: Meta = .{ .description = "Move cursor up" };
 
+    pub fn move_up_vim(self: *Self, _: Context) Result {
+        const root = try self.buf_root();
+        self.with_cursors_const(root, move_cursor_up_vim) catch {};
+        self.clamp();
+    }
+    pub const move_up_vim_meta: Meta = .{ .description = "Move cursor up (vim)" };
+
     pub fn add_cursor_up(self: *Self, _: Context) Result {
         try self.push_cursor();
         const primary = self.get_primary();
@@ -2957,6 +2982,13 @@ pub const Editor = struct {
         self.clamp();
     }
     pub const move_down_meta: Meta = .{ .description = "Move cursor down" };
+
+    pub fn move_down_vim(self: *Self, _: Context) Result {
+        const root = try self.buf_root();
+        self.with_cursors_const(root, move_cursor_down_vim) catch {};
+        self.clamp();
+    }
+    pub const move_down_vim_meta: Meta = .{ .description = "Move cursor down (vim)" };
 
     pub fn add_cursor_down(self: *Self, _: Context) Result {
         try self.push_cursor();
@@ -3405,7 +3437,7 @@ pub const Editor = struct {
         const root = self.buf_root() catch return;
         primary.disable_selection(root, self.metrics);
         self.selection_mode = .line;
-        try self.select_line_around_cursor(primary);
+        try self.select_line_around_cursor_vim(primary);
         self.clamp();
     }
     pub const select_line_vim_meta: Meta = .{ .description = "Select the line around the cursor (vim)" };
@@ -3604,12 +3636,12 @@ pub const Editor = struct {
         cursel.cursor = sel.end;
     }
 
-    fn select_line_around_cursor(self: *Self, cursel: *CurSel) !void {
+    fn select_line_around_cursor_vim(self: *Self, cursel: *CurSel) !void {
         const root = try self.buf_root();
         const sel = try cursel.enable_selection(root, self.metrics);
         sel.normalize();
         try move_cursor_begin(root, &sel.begin, self.metrics);
-        try move_cursor_end(root, &sel.end, self.metrics);
+        move_cursor_right_until(root, &sel.end, is_eol_right_vim, self.metrics);
     }
 
     fn selection_reverse(_: Buffer.Root, cursel: *CurSel) !void {
