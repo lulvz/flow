@@ -5,12 +5,14 @@ theme: []const u8 = "default",
 input_mode: []const u8 = "flow",
 gutter_line_numbers: bool = true,
 gutter_line_numbers_relative: bool = false,
+gutter_line_numbers_style: DigitStyle = .ascii,
 gutter_symbols: bool = true,
 enable_terminal_cursor: bool = true,
 enable_terminal_color_scheme: bool = builtin.os.tag != .windows,
 highlight_current_line: bool = true,
 highlight_current_line_gutter: bool = true,
 whitespace_mode: []const u8 = "none",
+inline_diagnostics: bool = true,
 animation_min_lag: usize = 0, //milliseconds
 animation_max_lag: usize = 150, //milliseconds
 enable_format_on_save: bool = false,
@@ -25,3 +27,10 @@ bottom_bar: []const u8 = "mode file log selection diagnostics keybind linenumber
 lsp_request_timeout: usize = 10,
 
 include_files: []const u8 = "",
+
+pub const DigitStyle = enum {
+    ascii,
+    digital,
+    subscript,
+    superscript,
+};

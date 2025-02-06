@@ -579,6 +579,29 @@ const cmds = struct {
     }
     pub const gutter_mode_next_meta: Meta = .{ .description = "Next gutter mode" };
 
+    pub fn gutter_style_next(self: *Self, _: Ctx) Result {
+        const config = tui.config_mut();
+        config.gutter_line_numbers_style = switch (config.gutter_line_numbers_style) {
+            .ascii => .digital,
+            .digital => .subscript,
+            .subscript => .superscript,
+            .superscript => .ascii,
+        };
+        try tui.save_config();
+        if (self.widgets.get("editor_gutter")) |gutter_widget| {
+            const gutter = gutter_widget.dynamic_cast(@import("editor_gutter.zig")) orelse return;
+            gutter.render_style = config.gutter_line_numbers_style;
+        }
+    }
+    pub const gutter_style_next_meta: Meta = .{ .description = "Next line number style" };
+
+    pub fn toggle_inline_diagnostics(_: *Self, _: Ctx) Result {
+        const config = tui.config_mut();
+        config.inline_diagnostics = !config.inline_diagnostics;
+        try tui.save_config();
+    }
+    pub const toggle_inline_diagnostics_meta: Meta = .{ .description = "Toggle display of diagnostics inline" };
+
     pub fn goto_next_file_or_diagnostic(self: *Self, ctx: Ctx) Result {
         if (self.is_panel_view_showing(filelist_view)) {
             switch (self.file_list_type) {
