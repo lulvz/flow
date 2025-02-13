@@ -2738,9 +2738,11 @@ pub const Editor = struct {
             if (self.cursels.items.len == 1) {
                 const primary = self.get_primary();
                 root = try self.insert_after(root, primary, text, b.allocator);
+                if(is_eol_vim(root, &primary.cursor, self.metrics)) try move_cursor_left_vim(root, &primary.cursor, self.metrics);
             } else {
                 for (self.cursels.items) |*cursel_| if (cursel_.*) |*cursel| {
                     root = try self.insert_after(root, cursel, text, b.allocator);
+                    if(is_eol_vim(root, &cursel.cursor, self.metrics)) try move_cursor_left_vim(root, &cursel.cursor, self.metrics);
                 };
             }
         }
