@@ -45,7 +45,7 @@
             ["$", "move_end"],
             [":", "open_command_palette"],
 
-            ["p", "paste_internal_vim"],
+            ["p", "paste_after_internal_vim"],
             ["P", "paste_internal_vim"],
 
             ["gd", "goto_definition"],
@@ -113,7 +113,7 @@
             ["^", "smart_move_begin"],
             ["$", "move_end"],
 
-            ["p", ["paste_internal_vim"], ["enter_mode", "normal"]],
+            ["p", ["paste_after_internal_vim"], ["enter_mode", "normal"]],
             ["P", ["paste_internal_vim"], ["enter_mode", "normal"]],
 
             ["<C-u>", "move_scroll_half_page_up_vim"],
@@ -150,7 +150,7 @@
             ["^", "smart_move_begin"],
             ["$", "move_end"],
 
-            ["p", ["paste_internal_vim"], ["enter_mode", "normal"]],
+            ["p", ["paste_after_internal_vim"], ["enter_mode", "normal"]],
             ["P", ["paste_internal_vim"], ["enter_mode", "normal"]],
 
             ["<C-u>", "move_scroll_half_page_up_vim"],

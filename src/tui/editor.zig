@@ -2412,6 +2412,17 @@ pub const Editor = struct {
         return root_;
     }
 
+    fn insert_after(self: *Self, root: Buffer.Root, cursel: *CurSel, s: []const u8, allocator: Allocator) !Buffer.Root {
+        var root_ = if (cursel.selection) |_| try self.delete_selection(root, cursel, allocator) else root;
+        const cursor = &cursel.cursor;
+        try cursor.move_right(root, self.metrics);
+        const begin = cursel.cursor;
+        cursor.row, cursor.col, root_ = try root_.insert_chars(cursor.row, cursor.col, s, allocator, self.metrics);
+        cursor.target = cursor.col;
+        self.nudge_insert(.{ .begin = begin, .end = cursor.* }, cursel, s.len);
+        return root_;
+    }
+
     fn insert_line_vim(self: *Self, root: Buffer.Root, cursel: *CurSel, s: []const u8, allocator: Allocator) !Buffer.Root {
         var root_ = if (cursel.selection) |_| try self.delete_selection(root, cursel, allocator) else root;
         const cursor = &cursel.cursor;
@@ -2694,6 +2705,51 @@ pub const Editor = struct {
         self.need_render();
     }
     pub const paste_internal_vim_meta = .{ .description = "Paste from internal clipboard (vim)" };
+
+    pub fn paste_after_internal_vim(self: *Self, ctx: Context) Result {
+        var text: []const u8 = undefined;
+        if (!(ctx.args.buf.len > 0 and try ctx.args.match(.{tp.extract(&text)}))) {
+            if (self.clipboard) |text_| text = text_ else return;
+        }
+
+        self.logger.print("paste: {d} bytes", .{text.len});
+        const b = try self.buf_for_update();
+        var root = b.root;
+
+        if (std.mem.eql(u8, text[text.len - 1 ..], "\n")) text = text[0 .. text.len - 1];
+
+        if (std.mem.indexOfScalar(u8, text, '\n')) |idx| {
+            if (idx == 0) {
+                for (self.cursels.items) |*cursel_| if (cursel_.*) |*cursel| {
+                    try move_cursor_end(root, &cursel.cursor, self.metrics);
+                    root = try self.insert(root, cursel, "\n", b.allocator);
+                };
+                text = text[1..];
+            }
+            if (self.cursels.items.len == 1) {
+                const primary = self.get_primary();
+                root = try self.insert_line_vim(root, primary, text, b.allocator);
+            } else {
+                for (self.cursels.items) |*cursel_| if (cursel_.*) |*cursel| {
+                    root = try self.insert_line_vim(root, cursel, text, b.allocator);
+                };
+            }
+        } else {
+            if (self.cursels.items.len == 1) {
+                const primary = self.get_primary();
+                root = try self.insert_after(root, primary, text, b.allocator);
+            } else {
+                for (self.cursels.items) |*cursel_| if (cursel_.*) |*cursel| {
+                    root = try self.insert_after(root, cursel, text, b.allocator);
+                };
+            }
+        }
+
+        try self.update_buf(root);
+        self.clamp();
+        self.need_render();
+    }
+    pub const paste_after_internal_vim_meta = .{ .description = "Paste after the cursor from internal clipboard (vim)" };
 
     pub fn delete_forward(self: *Self, _: Context) Result {
         const b = try self.buf_for_update();
