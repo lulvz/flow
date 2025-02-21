@@ -40,6 +40,7 @@
             ["V", ["enter_mode", "visual line"], ["select_line_vim"]],
 
             ["n", "goto_next_match"],
+            ["N", "goto_prev_match"],
             ["0", "move_begin"],
             ["^", "smart_move_begin"],
             ["$", "move_end"],
@@ -84,6 +85,9 @@
             ["/", "find"],
 
             ["<C-k>", "TODO"],
+
+            ["F", "move_to_char", "left"],
+            ["f", "move_to_char", "right"],
 
             ["<C-CR>", ["move_down"], ["move_begin"]],
             ["<CR>", ["move_down"], ["move_begin"]]

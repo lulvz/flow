@@ -465,7 +465,8 @@ const cmds = struct {
             }
         }
         try command.executeName("create_scratch_buffer", command.fmt(.{name.items}));
-        try command.executeName("change_file_type", .{});
+        if (tp.env.get().str("language").len == 0)
+            try command.executeName("change_file_type", .{});
     }
     pub const create_new_file_meta = .{ .description = "Create: New File…" };
 
@@ -571,25 +572,17 @@ const cmds = struct {
 
     pub fn gutter_mode_next(self: *Self, _: Ctx) Result {
         const config = tui.config_mut();
-        var ln = config.gutter_line_numbers;
-        var lnr = config.gutter_line_numbers_relative;
-        if (ln and !lnr) {
-            ln = true;
-            lnr = true;
-        } else if (ln and lnr) {
-            ln = false;
-            lnr = false;
-        } else {
-            ln = true;
-            lnr = false;
-        }
-        config.gutter_line_numbers = ln;
-        config.gutter_line_numbers_relative = lnr;
+        const mode: ?@import("config").LineNumberMode = if (config.gutter_line_numbers_mode) |mode| switch(mode) {
+            .absolute => .relative,
+            .relative => .none,
+            .none => null,
+        } else .relative;
+
+        config.gutter_line_numbers_mode = mode;
         try tui.save_config();
         if (self.widgets.get("editor_gutter")) |gutter_widget| {
             const gutter = gutter_widget.dynamic_cast(@import("editor_gutter.zig")) orelse return;
-            gutter.linenum = ln;
-            gutter.relative = lnr;
+            gutter.mode = mode;
         }
     }
     pub const gutter_mode_next_meta = .{ .description = "Next gutter mode" };

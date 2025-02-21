@@ -72,6 +72,8 @@ pub fn main() anyerror!void {
             .syntax_report_timing = "Report syntax highlighting time",
             .exec = "Execute a command on startup",
             .literal = "Disable :LINE and +LINE syntax",
+            .scratch = "Open a scratch (temporary) buffer on start",
+            .new_file = "Create a new untitled file on start",
             .version = "Show build version and exit",
         };
 
@@ -85,6 +87,8 @@ pub fn main() anyerror!void {
             .language = 'l',
             .exec = 'e',
             .literal = 'L',
+            .scratch = 'S',
+            .new_file = 'n',
             .version = 'v',
         };
 
@@ -106,6 +110,8 @@ pub fn main() anyerror!void {
         syntax_report_timing: bool,
         exec: ?[]const u8,
         literal: bool,
+        scratch: bool,
+        new_file: bool,
         version: bool,
     };
 
@@ -314,6 +320,12 @@ pub fn main() anyerror!void {
         if (!have_project)
             try tui_proc.send(.{ "cmd", "open_project_cwd" });
         try tui_proc.send(.{ "cmd", "show_home" });
+    }
+
+    if (args.new_file) {
+        try tui_proc.send(.{ "cmd", "create_new_file", .{} });
+    } else if (args.scratch) {
+        try tui_proc.send(.{ "cmd", "create_scratch_buffer", .{} });
     }
 
     if (args.exec) |exec_str| {
@@ -607,6 +619,13 @@ fn config_eql(comptime T: type, a: T, b: T) bool {
     }
     switch (@typeInfo(T)) {
         .Bool, .Int, .Float, .Enum => return a == b,
+        .Optional => |info| {
+            if (a == null and b == null)
+                return true;
+            if (a == null or b == null)
+                return false;
+            return config_eql(info.child, a.?, b.?);
+        },
         else => {},
     }
     @compileError("unsupported config type " ++ @typeName(T));

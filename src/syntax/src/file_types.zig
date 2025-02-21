@@ -389,6 +389,7 @@ pub const php = .{
     .extensions = .{"php"},
     .comment = "//",
     .injections = "tree-sitter-php/queries/injections.scm",
+    .language_server = .{"intelephense", "--stdio"},
 };
 
 pub const purescript = .{
@@ -445,7 +446,7 @@ pub const scheme = .{
 pub const sql = .{
     .description = "SQL",
     .icon = "󰆼",
-    .extensions = .{ "sql" },
+    .extensions = .{"sql"},
     .comment = "--",
 };
 
@@ -472,7 +473,7 @@ pub const verilog = .{
     .highlights = "nvim-treesitter/queries/verilog/highlights.scm",
     .injections = "nvim-treesitter/queries/verilog/injections.scm",
     .language_server = .{"verible-verilog-ls"},
-    .formatter = .{ "verible-verilog-format", "-" }
+    .formatter = .{ "verible-verilog-format", "-" },
 };
 
 pub const toml = .{
